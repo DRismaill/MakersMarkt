@@ -21,7 +21,7 @@
                     name="username"
                     type="text"
                     value="{{ old('username') }}"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 @error('username') border-red-400 @enderror"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900 @error('username') border-red-400 @enderror"
                     required
                     autofocus
                     autocomplete="username"
@@ -37,7 +37,7 @@
                     id="password"
                     name="password"
                     type="password"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900"
                     required
                     autocomplete="current-password"
                 />
@@ -75,6 +75,4 @@
             </div>
         @endif
     </div>
-</x-layouts::auth>
-
 </x-layouts::auth>
