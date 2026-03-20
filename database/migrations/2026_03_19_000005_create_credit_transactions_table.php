@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('credit_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('from_user_id')->constrained('users')->nullable();
-            $table->foreignId('to_user_id')->constrained('users')->nullable();
+            $table->foreignId('from_user_id')->nullable()->constrained('users');
+            $table->foreignId('to_user_id')->nullable()->constrained('users');
             $table->string('amount');
             $table->string('reason_type', 20);
-            $table->foreignId('order_id')->constrained('orders')->nullable();
-            $table->foreignId('created_by_admin_id')->constrained('users')->nullable();
+            $table->foreignId('order_id')->nullable()->constrained('orders');
+            $table->foreignId('created_by_admin_id')->nullable()->constrained('users');
             $table->timestampTz('created_at')->useCurrent();
 
             $table->index(['from_user_id']);
