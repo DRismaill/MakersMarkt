@@ -35,13 +35,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'username' => $this->faker->unique()->userName(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'role' => UserRole::Buyer->value, // Default role
-            'password' => static::$password ??= Hash::make('password'),
-            'credit_balance' => 0.00,
-            'is_blocked' => false,
-            'is_deleted' => false,
+            'username' => fake()->unique()->userName(),
+            'email' => fake()->unique()->safeEmail(),
+            'password_hash' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

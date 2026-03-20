@@ -22,13 +22,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'role',
-        'username',
+        'name',
         'email',
         'password',
-        'credit_balance',
-        'is_blocked',
-        'is_deleted',
     ];
 
     /**
@@ -48,19 +44,29 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected $casts = [
-        'credit_balance' => 'decimal:2',
-        'is_blocked' => 'boolean',
-        'is_deleted' => 'boolean',
-        'role' => UserRole::class,
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'role' => UserRole::class,
+        ];
+    }
 
     /**
-     * Get the user's initials
+     * Get the hashed password for authentication.
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password_hash;
+    }
+
+    /**
+     * Get the user's initials from username
      */
     public function initials(): string
     {
-        return Str::of($this->username)
+        return Str::of($this->name)
             ->explode(' ')
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))

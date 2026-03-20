@@ -10,7 +10,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('product_types', function (Blueprint $table) {
-            $table->integer('id')->nullable()->primary();
+            $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
 
