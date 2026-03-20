@@ -24,8 +24,8 @@ return new class extends Migration
             // email varchar(255) [not null, unique]
             $table->string('email', 255)->unique();
 
-            // password_hash varchar(255) [not null]
-            $table->string('password_hash', 255);
+            // password varchar(255) [not null]
+            $table->string('password', 255);
 
             // credit_balance numeric(10,2) [not null, default: 0]
             $table->decimal('credit_balance', 10, 2)->default(0);

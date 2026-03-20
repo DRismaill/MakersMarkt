@@ -33,7 +33,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password_hash',
+        'password',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'remember_token',
@@ -58,7 +58,7 @@ class User extends Authenticatable
      */
     public function getAuthPassword(): string
     {
-        return $this->password_hash;
+        return $this->password;
     }
 
     /**
