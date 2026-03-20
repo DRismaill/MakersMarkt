@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -22,9 +23,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'role',
+        'username',
         'email',
         'password',
+        'credit_balance',
+        'is_blocked',
+        'is_deleted',
     ];
 
     /**
@@ -48,7 +53,10 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+            'credit_balance' => 'decimal:2',
+            'is_blocked' => 'boolean',
+            'is_deleted' => 'boolean',
             'role' => UserRole::class,
         ];
     }
@@ -62,11 +70,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user's initials from username
+     * Determine whether the user can access the given Filament panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() !== 'admin') {
+            return true;
+        }
+
+        return $this->isAdmin() && ! $this->is_blocked && ! $this->is_deleted;
+    }
+
+    /**
+     * Get the user's initials from username.
      */
     public function initials(): string
     {
-        return Str::of($this->name)
+        return Str::of($this->username)
             ->explode(' ')
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
@@ -75,6 +95,6 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin->value;
+        return $this->role === UserRole::Admin;
     }
 }
