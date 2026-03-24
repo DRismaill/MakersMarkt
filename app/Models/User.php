@@ -4,15 +4,13 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -71,13 +69,20 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Determine whether the user can access the given Filament panel.
+     *
+     * When Filament is not installed the $panel argument may be any value.
      */
-    public function canAccessPanel(Panel $panel): bool
+    public function canAccessPanel(mixed $panel): bool
     {
-        if ($panel->getId() !== 'admin') {
-            return true;
+        if (is_object($panel) && method_exists($panel, 'getId')) {
+            if ($panel->getId() !== 'admin') {
+                return true;
+            }
+
+            return $this->isAdmin() && ! $this->is_blocked && ! $this->is_deleted;
         }
 
+        // If Filament isn't available, default to allowing access only for admins
         return $this->isAdmin() && ! $this->is_blocked && ! $this->is_deleted;
     }
 
