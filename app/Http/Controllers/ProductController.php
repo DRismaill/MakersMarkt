@@ -117,6 +117,57 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+        
+        // Check if the user is the owner of the product
+        if (auth()->id() !== $product->maker_id) {
+            abort(403, 'You can only delete your own products');
+        }
+        
+        $product->delete();
+        
+        return redirect()->route('products.portfolio')->with('success', 'Product deleted successfully!');
+    }
+
+    /**
+     * Display the maker's portfolio
+     */
+    public function portfolio()
+    {
+        // Get the sort parameter from request, default to 'newest'
+        $sort = request('sort', 'newest');
+        
+        // Start query for maker's products
+        $query = Product::where('maker_id', auth()->id());
+        
+        // Apply sorting
+        switch ($sort) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'price_asc':
+                $query->orderBy('price_credit', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price_credit', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+        
+        $products = $query->get();
+        
+        return view('pages.products.portfolio', [
+            'products' => $products,
+            'currentSort' => $sort
+        ]);
     }
 }

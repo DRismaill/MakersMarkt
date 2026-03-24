@@ -50,5 +50,16 @@ class UserSeeder extends Seeder
                 'is_deleted' => false,
             ]);
         }
+
+        // Create special maker user "gert"
+        User::create([
+            'role' => UserRole::Maker->value,
+            'username' => 'gert',
+            'email' => 'gert@example.com',
+            'password' => Hash::make('password'),
+            'credit_balance' => 100.00,
+            'is_blocked' => false,
+            'is_deleted' => false,
+        ]);
     }
 }

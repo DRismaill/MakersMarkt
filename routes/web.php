@@ -14,6 +14,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Only makers can access these routes
     Route::middleware('role:maker')->group(function () {
+        // Portfolio route - MUST BE FIRST before {id} routes
+        Route::get('products/portfolio', [ProductController::class, 'portfolio'])->name('products.portfolio');
+        
         Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('products', [ProductController::class, 'store'])->name('products.store');
         Route::get('products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
