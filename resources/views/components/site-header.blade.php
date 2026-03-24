@@ -6,8 +6,7 @@
 
         <nav class="ms-auto flex h-full items-center text-zinc-700">
             <a
-                href="{{ auth()->check() ? route('dashboard') : route('home') }}"
-                wire:navigate
+                href="#"
                 class="flex h-full items-center gap-1.5 px-4 text-base hover:text-zinc-900"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
@@ -16,17 +15,21 @@
                 <span>Catalogus</span>
             </a>
 
-            <a
-                href="{{ auth()->check() ? route('profile.edit') : route('home') }}"
-                wire:navigate
-                class="flex h-full items-center gap-1.5 border-s border-zinc-300 px-4 text-base hover:text-zinc-900"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h10.5m-10.5 4.5h10.5m-10.5 4.5h6" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v12a1.5 1.5 0 0 1-1.5 1.5H5.25A1.5 1.5 0 0 1 3.75 18V6a1.5 1.5 0 0 1 1.5-1.5Z" />
-                </svg>
-                <span>Mijn Portfolio</span>
-            </a>
+            @auth
+                @if(auth()->user()->role === \App\Enums\UserRole::Maker)
+                <a
+                    href="{{ route('profile.edit') }}"
+                    wire:navigate
+                    class="flex h-full items-center gap-1.5 border-s border-zinc-300 px-4 text-base hover:text-zinc-900"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5h10.5m-10.5 4.5h10.5m-10.5 4.5h6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v12a1.5 1.5 0 0 1-1.5 1.5H5.25A1.5 1.5 0 0 1 3.75 18V6a1.5 1.5 0 0 1 1.5-1.5Z" />
+                    </svg>
+                    <span>Mijn Portfolio</span>
+                </a>
+                @endif
+            @endauth
 
             @auth
                 <div class="flex h-full items-center border-s border-zinc-300 px-4">
