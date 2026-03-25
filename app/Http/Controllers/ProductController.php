@@ -134,12 +134,29 @@ class ProductController extends Controller
      */
     public function portfolio()
     {
-        // Get the sort parameter from request, default to 'newest'
-        $sort = request('sort', 'newest');
-        
+        $sort           = request('sort', 'newest');
+        $filterType     = request('type');
+        $filterComplexity = request('complexity');
+        $filterStatus   = request('status');
+        $search         = request('search');
+
         // Start query for maker's products
         $query = Product::where('maker_id', auth()->id());
-        
+
+        // Apply filters
+        if ($filterType) {
+            $query->where('product_type_id', $filterType);
+        }
+        if ($filterComplexity) {
+            $query->where('complexity', $filterComplexity);
+        }
+        if ($filterStatus) {
+            $query->where('approval_status', $filterStatus);
+        }
+        if ($search) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
         // Apply sorting
         switch ($sort) {
             case 'name_asc':
@@ -162,12 +179,20 @@ class ProductController extends Controller
                 $query->orderBy('created_at', 'desc');
                 break;
         }
-        
-        $products = $query->get();
-        
+
+        $products     = $query->get();
+        $productTypes = ProductType::all();
+        $complexityLevels = ComplexityLevel::cases();
+
         return view('pages.products.portfolio', [
-            'products' => $products,
-            'currentSort' => $sort
+            'products'          => $products,
+            'currentSort'       => $sort,
+            'productTypes'      => $productTypes,
+            'complexityLevels'  => $complexityLevels,
+            'filterType'        => $filterType,
+            'filterComplexity'  => $filterComplexity,
+            'filterStatus'      => $filterStatus,
+            'search'            => $search,
         ]);
     }
 }

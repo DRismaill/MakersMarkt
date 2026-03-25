@@ -25,7 +25,12 @@
         <!-- My Products Section -->
         <div class="container mx-auto px-4 py-8">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Mijn Producten ({{ $products->count() }})</h2>
+                <h2 class="text-2xl font-bold text-gray-900">
+                    Mijn Producten ({{ $products->count() }}
+                    @if(request()->hasAny(['type','complexity','status','search']))
+                        <span class="text-base font-normal text-orange-500">gefilterd</span>
+                    @endif)
+                </h2>
                 <a href="{{ route('products.create') }}" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -34,35 +39,89 @@
                 </a>
             </div>
 
-            @if(!$products->isEmpty())
-                <!-- Sort Options -->
-                <div class="mb-6 flex items-center gap-3">
-                    <label for="sort-select" class="text-sm font-medium text-gray-700">Sorteren op:</label>
-                    <select 
-                        id="sort-select"
-                        onchange="window.location.href = '{{ route('products.portfolio') }}?sort=' + this.value"
-                        class="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    >
-                        <option value="newest" {{ $currentSort === 'newest' ? 'selected' : '' }}>
-                            Nieuwste eerst
-                        </option>
-                        <option value="oldest" {{ $currentSort === 'oldest' ? 'selected' : '' }}>
-                            Oudste eerst
-                        </option>
-                        <option value="name_asc" {{ $currentSort === 'name_asc' ? 'selected' : '' }}>
-                            Naam (A → Z)
-                        </option>
-                        <option value="name_desc" {{ $currentSort === 'name_desc' ? 'selected' : '' }}>
-                            Naam (Z → A)
-                        </option>
-                        <option value="price_asc" {{ $currentSort === 'price_asc' ? 'selected' : '' }}>
-                            Prijs (Laag → Hoog)
-                        </option>
-                        <option value="price_desc" {{ $currentSort === 'price_desc' ? 'selected' : '' }}>
-                            Prijs (Hoog → Laag)
-                        </option>
-                    </select>
-                </div>
+            @if(!$products->isEmpty() || request()->hasAny(['type','complexity','status','search']))
+                <!-- Filter & Sort Bar -->
+                <form method="GET" action="{{ route('products.portfolio') }}" class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
+                        <!-- Search -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Zoek op naam</label>
+                            <input
+                                type="text"
+                                name="search"
+                                value="{{ $search }}"
+                                placeholder="Productnaam..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            >
+                        </div>
+
+                        <!-- Product Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Type</label>
+                            <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Alle types</option>
+                                @foreach ($productTypes as $type)
+                                    <option value="{{ $type->id }}" {{ $filterType == $type->id ? 'selected' : '' }}>
+                                        {{ $type->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Complexity -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Complexiteit</label>
+                            <select name="complexity" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Alle niveaus</option>
+                                @foreach ($complexityLevels as $level)
+                                    <option value="{{ $level->value }}" {{ $filterComplexity === $level->value ? 'selected' : '' }}>
+                                        {{ ucfirst($level->value) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Approval Status -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Status</label>
+                            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="">Alle statussen</option>
+                                <option value="pending"  {{ $filterStatus === 'pending'  ? 'selected' : '' }}>In afwachting</option>
+                                <option value="approved" {{ $filterStatus === 'approved' ? 'selected' : '' }}>Goedgekeurd</option>
+                                <option value="rejected" {{ $filterStatus === 'rejected' ? 'selected' : '' }}>Afgewezen</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-center justify-between mt-3 gap-3 flex-wrap">
+                        <!-- Sort -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Sorteren op:</label>
+                            <select name="sort" class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                <option value="newest"     {{ $currentSort === 'newest'     ? 'selected' : '' }}>Nieuwste eerst</option>
+                                <option value="oldest"     {{ $currentSort === 'oldest'     ? 'selected' : '' }}>Oudste eerst</option>
+                                <option value="name_asc"   {{ $currentSort === 'name_asc'   ? 'selected' : '' }}>Naam (A → Z)</option>
+                                <option value="name_desc"  {{ $currentSort === 'name_desc'  ? 'selected' : '' }}>Naam (Z → A)</option>
+                                <option value="price_asc"  {{ $currentSort === 'price_asc'  ? 'selected' : '' }}>Prijs (Laag → Hoog)</option>
+                                <option value="price_desc" {{ $currentSort === 'price_desc' ? 'selected' : '' }}>Prijs (Hoog → Laag)</option>
+                            </select>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex gap-2">
+                            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg text-sm">
+                                Toepassen
+                            </button>
+                            @if(request()->hasAny(['type','complexity','status','search']))
+                                <a href="{{ route('products.portfolio') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg text-sm">
+                                    Wis filters
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </form>
             @endif
 
             @if($products->isEmpty())
@@ -70,8 +129,13 @@
                     <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                     </svg>
-                    <p class="text-gray-600 text-lg">Je hebt nog geen producten aangemaakt</p>
-                    <a href="{{ route('products.create') }}" class="text-orange-500 hover:underline mt-4 inline-block font-semibold">Maak je eerste product</a>
+                    @if(request()->hasAny(['type','complexity','status','search']))
+                        <p class="text-gray-600 text-lg">Geen producten gevonden met deze filters</p>
+                        <a href="{{ route('products.portfolio') }}" class="text-orange-500 hover:underline mt-4 inline-block font-semibold">Wis alle filters</a>
+                    @else
+                        <p class="text-gray-600 text-lg">Je hebt nog geen producten aangemaakt</p>
+                        <a href="{{ route('products.create') }}" class="text-orange-500 hover:underline mt-4 inline-block font-semibold">Maak je eerste product</a>
+                    @endif
                 </div>
             @else
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
