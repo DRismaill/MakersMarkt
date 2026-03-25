@@ -17,7 +17,8 @@
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
                     <a
-                        href="#"
+                        href="{{ route('products.index') }}"
+                        wire:navigate
                         class="rounded-lg bg-amber-600 hover:bg-amber-700 px-6 py-3 text-base font-medium text-white transition-colors"
                     >
                         Bekijk producten
