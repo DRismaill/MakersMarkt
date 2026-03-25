@@ -37,10 +37,20 @@
             <!-- Name -->
             <div class="mb-4">
                 <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Product Name</label>
-                <input type="text" id="name" name="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ $product->name }}" required>
-                @error('name')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                @enderror
+                <input type="text" id="name" name="name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 @error('name') border-red-500 @enderror"
+                    value="{{ old('name', $product->name) }}"
+                    maxlength="30"
+                    oninput="updateNameCounter(this)"
+                    required>
+                <div class="flex justify-between items-center mt-1">
+                    <div>
+                        @error('name')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <span id="name-counter" class="text-gray-400 text-xs">0 / 30</span>
+                </div>
             </div>
 
             <!-- Description -->
@@ -142,4 +152,25 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function updateNameCounter(input) {
+            const max = 30;
+            const len = input.value.length;
+            const counter = document.getElementById('name-counter');
+            counter.textContent = len + ' / ' + max;
+            if (len >= max) {
+                counter.classList.add('text-red-500');
+                counter.classList.remove('text-gray-400');
+            } else {
+                counter.classList.remove('text-red-500');
+                counter.classList.add('text-gray-400');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const nameInput = document.getElementById('name');
+            if (nameInput) updateNameCounter(nameInput);
+        });
+    </script>
 </x-layouts::app>

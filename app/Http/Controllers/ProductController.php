@@ -39,7 +39,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'product_type_id' => 'required|exists:product_types,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:30',
             'description' => 'required|string',
             'material' => 'required|string|max:255',
             'production_time_days' => 'required|integer|min:1',
@@ -93,7 +93,7 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'product_type_id' => 'required|exists:product_types,id',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:30',
             'description' => 'required|string',
             'material' => 'required|string|max:255',
             'production_time_days' => 'required|integer|min:1',

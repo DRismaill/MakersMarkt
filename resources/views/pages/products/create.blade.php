@@ -36,10 +36,21 @@
             <!-- Name -->
             <div class="mb-4">
                 <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Product Name</label>
-                <input type="text" id="name" name="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ old('name') }}" required>
-                @error('name')
-                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                @enderror
+                <input type="text" id="name" name="name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 @error('name') border-red-500 @enderror"
+                    value="{{ old('name') }}"
+                    maxlength="30"
+                    oninput="updateNameCounter(this)"
+                    required>
+                <div class="flex justify-between items-center mt-1">
+                    <div>
+                        @error('name')
+                            <span class="text-red-500 text-sm">{{ $message }}</span>
+                        @enderror
+                        <span id="name-error" class="text-red-500 text-sm hidden">Product name cannot exceed 30 characters.</span>
+                    </div>
+                    <span id="name-counter" class="text-gray-400 text-xs">0 / 30</span>
+                </div>
             </div>
 
             <!-- Description -->
@@ -141,4 +152,27 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function updateNameCounter(input) {
+            const max = 30;
+            const len = input.value.length;
+            const counter = document.getElementById('name-counter');
+            const error = document.getElementById('name-error');
+            counter.textContent = len + ' / ' + max;
+            if (len >= max) {
+                counter.classList.add('text-red-500');
+                counter.classList.remove('text-gray-400');
+            } else {
+                counter.classList.remove('text-red-500');
+                counter.classList.add('text-gray-400');
+            }
+        }
+
+        // Initialise counter on page load (for old() values)
+        document.addEventListener('DOMContentLoaded', function () {
+            const nameInput = document.getElementById('name');
+            if (nameInput) updateNameCounter(nameInput);
+        });
+    </script>
 </x-layouts::app>
