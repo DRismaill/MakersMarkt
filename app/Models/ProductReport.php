@@ -10,6 +10,8 @@ class ProductReport extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'product_id',
         'reported_by_user_id',

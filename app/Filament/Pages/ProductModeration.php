@@ -5,7 +5,13 @@ namespace App\Filament\Pages;
 use App\Enums\ProductApprovalStatus;
 use App\Filament\Pages\Concerns\AuthorizesAdminAccess;
 use App\Models\Product;
+use App\Models\User;
+use App\Services\ProductAdminService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
@@ -90,6 +96,63 @@ class ProductModeration extends Page implements HasTable
                 SelectFilter::make('approval_status')
                     ->label('Status')
                     ->options($this->getStatusOptions()),
+            ])
+            ->actions([
+                Action::make('approveProduct')
+                    ->label('Goedkeuren')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Product $record): string => "Product goedkeuren: {$record->name}")
+                    ->modalDescription('Het product wordt goedgekeurd voor het platform. Open flags blijven wel bestaan als er nog rapporten of een externe link aanwezig zijn.')
+                    ->action(function (Product $record): void {
+                        $admin = Filament::auth()->user();
+
+                        if (! $admin instanceof User) {
+                            abort(403);
+                        }
+
+                        $updatedProduct = app(ProductAdminService::class)->approve($record, $admin);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Product goedgekeurd')
+                            ->body("{$updatedProduct->name} is bijgewerkt.")
+                            ->send();
+                    }),
+                Action::make('rejectProduct')
+                    ->label('Afkeuren')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->schema([
+                        Textarea::make('rejection_reason')
+                            ->label('Afwijsreden')
+                            ->rows(4)
+                            ->required()
+                            ->maxLength(1000),
+                    ])
+                    ->modalHeading(fn (Product $record): string => "Product afkeuren: {$record->name}")
+                    ->modalDescription('De maker kan de afwijsreden gebruiken om het product te verbeteren.')
+                    ->modalSubmitActionLabel('Afkeuren')
+                    ->action(function (array $data, Product $record): void {
+                        $admin = Filament::auth()->user();
+
+                        if (! $admin instanceof User) {
+                            abort(403);
+                        }
+
+                        $updatedProduct = app(ProductAdminService::class)->reject(
+                            product: $record,
+                            admin: $admin,
+                            reason: $data['rejection_reason'],
+                        );
+
+                        Notification::make()
+                            ->success()
+                            ->title('Product afgekeurd')
+                            ->body("{$updatedProduct->name} is afgekeurd.")
+                            ->send();
+                    }),
             ]);
     }
 

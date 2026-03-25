@@ -6,7 +6,12 @@ use App\Enums\ProductApprovalStatus;
 use App\Enums\ReportStatus;
 use App\Filament\Pages\Concerns\AuthorizesAdminAccess;
 use App\Models\Product;
+use App\Models\User;
+use App\Services\ProductAdminService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
@@ -58,7 +63,10 @@ class FlaggedProducts extends Page implements HasTable
                     ->where(function ($query): void {
                         $query
                             ->where('has_external_link', true)
-                            ->orWhereHas('productReports');
+                            ->orWhereHas('productReports', fn ($query) => $query->whereIn('status', [
+                                ReportStatus::Open->value,
+                                ReportStatus::InReview->value,
+                            ]));
                     })
             )
             ->defaultSort('updated_at', 'desc')
@@ -93,6 +101,52 @@ class FlaggedProducts extends Page implements HasTable
                     ->label('Laatst Gewijzigd')
                     ->since()
                     ->sortable(),
+            ])
+            ->actions([
+                Action::make('resolveFlags')
+                    ->label('Flags afhandelen')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Product $record): string => "Flags afhandelen: {$record->name}")
+                    ->modalDescription('Deze actie markeert open rapporten als opgelost en verwijdert de externe-link-flag van het product.')
+                    ->action(function (Product $record): void {
+                        $admin = Filament::auth()->user();
+
+                        if (! $admin instanceof User) {
+                            abort(403);
+                        }
+
+                        $updatedProduct = app(ProductAdminService::class)->resolveFlags($record, $admin);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Flags afgehandeld')
+                            ->body("{$updatedProduct->name} is uit de moderatiequeue gehaald voor open flags.")
+                            ->send();
+                    }),
+                Action::make('deactivateProduct')
+                    ->label('Deactiveren')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (Product $record): string => "Product deactiveren: {$record->name}")
+                    ->modalDescription('Gebruik dit als het product niet op het platform mag blijven staan. Bestaande orders en reviews blijven intact.')
+                    ->action(function (Product $record): void {
+                        $admin = Filament::auth()->user();
+
+                        if (! $admin instanceof User) {
+                            abort(403);
+                        }
+
+                        $updatedProduct = app(ProductAdminService::class)->deactivate($record, $admin);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Product gedeactiveerd')
+                            ->body("{$updatedProduct->name} is gedeactiveerd.")
+                            ->send();
+                    }),
             ]);
     }
 
