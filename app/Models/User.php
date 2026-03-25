@@ -64,10 +64,6 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Get the hashed password for authentication.
      */
-    public function getAuthPassword(): string
-    {
-        return $this->password;
-    }
 
     /**
      * Determine whether the user can access the given Filament panel.
@@ -96,5 +92,11 @@ class User extends Authenticatable implements FilamentUser
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    public function getNameAttribute(): string
+    {
+        // fallback so Filament never gets null
+        return $this->username ?? $this->email ?? '';
     }
 }
