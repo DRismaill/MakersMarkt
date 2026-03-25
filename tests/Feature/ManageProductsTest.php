@@ -38,12 +38,12 @@ function createProductRecord(array $overrides = []): Product
         'product_type_id' => $productType->id,
         'name' => $name,
         'slug' => Str::slug($name).'-'.Str::lower(Str::random(5)),
-        'description' => 'Beschrijving voor testproduct.',
-        'material' => 'Hout',
-        'production_time_days' => 5,
+        'description' => $overrides['description'] ?? 'Beschrijving voor testproduct.',
+        'material' => $overrides['material'] ?? 'Hout',
+        'production_time_days' => $overrides['production_time_days'] ?? 5,
         'complexity' => $overrides['complexity'] ?? ComplexityLevel::Medium,
         'durability' => $overrides['durability'] ?? DurabilityLevel::High,
-        'unique_feature' => 'Handgemaakt',
+        'unique_feature' => $overrides['unique_feature'] ?? 'Handgemaakt',
         'price_credit' => $overrides['price_credit'] ?? 39.95,
         'approval_status' => $overrides['approval_status'] ?? ProductApprovalStatus::Approved,
         'approved_by_admin_id' => $overrides['approved_by_admin_id'] ?? null,
@@ -93,6 +93,85 @@ it('shows the deactivate action only for active products', function (): void {
     Livewire::test(ManageProducts::class)
         ->assertTableActionVisible('deactivateProduct', $activeProduct->getKey())
         ->assertTableActionHidden('deactivateProduct', $deactivatedProduct->getKey());
+});
+
+it('shows product filters and combines them dynamically with clearable results', function (): void {
+    $admin = User::factory()->create([
+        'role' => UserRole::Admin,
+    ]);
+
+    $ceramicType = ProductType::query()->create([
+        'name' => 'Keramiek',
+        'description' => 'Keramische producten',
+    ]);
+
+    $woodType = ProductType::query()->create([
+        'name' => 'Hout',
+        'description' => 'Houten producten',
+    ]);
+
+    $matchingProduct = createProductRecord([
+        'name' => 'Keramiek Vaas',
+        'description' => 'Handgemaakt interieurstuk met glazuur',
+        'material' => 'Keramiek',
+        'production_time_days' => 7,
+        'product_type' => $ceramicType,
+    ]);
+
+    $sameSpecsDifferentName = createProductRecord([
+        'name' => 'Keramiek Kom',
+        'description' => 'Handgemaakt interieurstuk met glazuur',
+        'material' => 'Keramiek',
+        'production_time_days' => 7,
+        'product_type' => $ceramicType,
+    ]);
+
+    $differentDescription = createProductRecord([
+        'name' => 'Keramiek Lamp',
+        'description' => 'Modern product voor buitengebruik',
+        'material' => 'Keramiek',
+        'production_time_days' => 7,
+        'product_type' => $ceramicType,
+    ]);
+
+    $differentType = createProductRecord([
+        'name' => 'Houten Vaas',
+        'description' => 'Handgemaakt interieurstuk met glazuur',
+        'material' => 'Hout',
+        'production_time_days' => 7,
+        'product_type' => $woodType,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(ManageProducts::getUrl(panel: 'admin'))
+        ->assertSeeText('Naam')
+        ->assertSeeText('Beschrijving')
+        ->assertSeeText('Type')
+        ->assertSeeText('Materiaal')
+        ->assertSeeText('Productietijd (dagen)')
+        ->assertSeeText('Goedkeuring');
+
+    $component = Livewire::test(ManageProducts::class)
+        ->filterTable('product_filters', [
+            'name' => 'Vaas',
+            'description' => 'Handgemaakt',
+            'product_type_id' => $ceramicType->id,
+            'material' => 'Keramiek',
+            'production_time_days' => 7,
+        ])
+        ->assertCanSeeTableRecords([$matchingProduct])
+        ->assertCanNotSeeTableRecords([$sameSpecsDifferentName, $differentDescription, $differentType]);
+
+    expect($component->instance()->getTable()->hasDeferredFilters())->toBeFalse();
+
+    $component
+        ->removeTableFilter('product_filters', 'name')
+        ->assertCanSeeTableRecords([$matchingProduct, $sameSpecsDifferentName])
+        ->assertCanNotSeeTableRecords([$differentDescription, $differentType]);
+
+    $component
+        ->removeTableFilters()
+        ->assertCanSeeTableRecords([$matchingProduct, $sameSpecsDifferentName, $differentDescription, $differentType]);
 });
 
 it('lets an admin deactivate a product without breaking existing orders or reviews and logs the action', function (): void {

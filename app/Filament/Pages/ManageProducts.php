@@ -6,11 +6,14 @@ use App\Enums\ProductAdminActionType;
 use App\Enums\ProductApprovalStatus;
 use App\Filament\Pages\Concerns\AuthorizesAdminAccess;
 use App\Models\Product;
+use App\Models\ProductType;
 use App\Models\User;
 use App\Services\ProductAdminService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
@@ -18,8 +21,11 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class ManageProducts extends Page implements HasTable
@@ -53,18 +59,34 @@ class ManageProducts extends Page implements HasTable
         return $table
             ->query(Product::query()->with(['maker', 'productType']))
             ->defaultSort('created_at', 'desc')
+            ->deferFilters(false)
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filtersFormColumns(1)
             ->description('Deactiveren zet een product uit de publieke catalogus zonder bestaande orders of reviews te verbreken.')
             ->columns([
                 TextColumn::make('name')
                     ->label('Product')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('description')
+                    ->label('Beschrijving')
+                    ->limit(50)
+                    ->toggleable(),
                 TextColumn::make('maker.username')
                     ->label('Maker')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('productType.name')
-                    ->label('Categorie')
+                    ->label('Type')
+                    ->toggleable(),
+                TextColumn::make('material')
+                    ->label('Materiaal')
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('production_time_days')
+                    ->label('Productietijd')
+                    ->suffix(' dagen')
+                    ->sortable()
                     ->toggleable(),
                 TextColumn::make('approval_status')
                     ->label('Goedkeuring')
@@ -89,9 +111,43 @@ class ManageProducts extends Page implements HasTable
                     ->color(fn (bool $state): string => $state ? 'danger' : 'gray'),
             ])
             ->filters([
-                SelectFilter::make('approval_status')
-                    ->label('Goedkeuring')
-                    ->options($this->getApprovalStatusOptions()),
+                Filter::make('product_filters')
+                    ->label('Snel filteren')
+                    ->columns([
+                        'md' => 2,
+                        'xl' => 3,
+                    ])
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Naam')
+                            ->placeholder('Bijv. vaas of lamp')
+                            ->prefixIcon('heroicon-o-magnifying-glass'),
+                        TextInput::make('description')
+                            ->label('Beschrijving')
+                            ->placeholder('Bijv. handgemaakt of glazuur')
+                            ->prefixIcon('heroicon-o-document-text'),
+                        Select::make('product_type_id')
+                            ->label('Type')
+                            ->placeholder('Alle types')
+                            ->options($this->getProductTypeOptions())
+                            ->native(false)
+                            ->searchable(),
+                        TextInput::make('material')
+                            ->label('Materiaal')
+                            ->placeholder('Bijv. hout of keramiek')
+                            ->prefixIcon('heroicon-o-swatch'),
+                        TextInput::make('production_time_days')
+                            ->label('Productietijd (dagen)')
+                            ->numeric()
+                            ->placeholder('Bijv. 7'),
+                        Select::make('approval_status')
+                            ->label('Goedkeuring')
+                            ->placeholder('Alle statussen')
+                            ->options($this->getApprovalStatusOptions())
+                            ->native(false),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $this->applyProductFilters($query, $data))
+                    ->indicateUsing(fn (array $data): array => $this->getProductFilterIndicators($data)),
             ])
             ->actions([
                 Action::make('deactivateProduct')
@@ -119,6 +175,88 @@ class ManageProducts extends Page implements HasTable
                             ->send();
                     }),
             ]);
+    }
+
+    private function applyProductFilters(Builder $query, array $data): Builder
+    {
+        return $query
+            ->when(
+                filled($data['name'] ?? null),
+                fn (Builder $query): Builder => $query->where('name', 'like', '%'.trim($data['name']).'%'),
+            )
+            ->when(
+                filled($data['description'] ?? null),
+                fn (Builder $query): Builder => $query->where('description', 'like', '%'.trim($data['description']).'%'),
+            )
+            ->when(
+                filled($data['product_type_id'] ?? null),
+                fn (Builder $query): Builder => $query->where('product_type_id', $data['product_type_id']),
+            )
+            ->when(
+                filled($data['material'] ?? null),
+                fn (Builder $query): Builder => $query->where('material', 'like', '%'.trim($data['material']).'%'),
+            )
+            ->when(
+                filled($data['production_time_days'] ?? null),
+                fn (Builder $query): Builder => $query->where('production_time_days', (int) $data['production_time_days']),
+            )
+            ->when(
+                filled($data['approval_status'] ?? null),
+                fn (Builder $query): Builder => $query->where('approval_status', $data['approval_status']),
+            );
+    }
+
+    /**
+     * @return array<int, Indicator>
+     */
+    private function getProductFilterIndicators(array $data): array
+    {
+        $indicators = [];
+
+        if (filled($data['name'] ?? null)) {
+            $indicators[] = Indicator::make('Naam: '.trim($data['name']))
+                ->removeField('name');
+        }
+
+        if (filled($data['description'] ?? null)) {
+            $indicators[] = Indicator::make('Beschrijving: '.trim($data['description']))
+                ->removeField('description');
+        }
+
+        if (filled($data['product_type_id'] ?? null)) {
+            $productTypeLabel = $this->getProductTypeOptions()[(string) $data['product_type_id']] ?? $data['product_type_id'];
+
+            $indicators[] = Indicator::make('Type: '.$productTypeLabel)
+                ->removeField('product_type_id');
+        }
+
+        if (filled($data['material'] ?? null)) {
+            $indicators[] = Indicator::make('Materiaal: '.trim($data['material']))
+                ->removeField('material');
+        }
+
+        if (filled($data['production_time_days'] ?? null)) {
+            $indicators[] = Indicator::make('Productietijd: '.(int) $data['production_time_days'].' dagen')
+                ->removeField('production_time_days');
+        }
+
+        if (filled($data['approval_status'] ?? null)) {
+            $indicators[] = Indicator::make('Goedkeuring: '.$this->formatApprovalStatus($data['approval_status']))
+                ->removeField('approval_status');
+        }
+
+        return $indicators;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getProductTypeOptions(): array
+    {
+        return ProductType::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     /**
