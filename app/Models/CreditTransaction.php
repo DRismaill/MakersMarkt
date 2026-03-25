@@ -10,6 +10,8 @@ class CreditTransaction extends Model
 {
     use HasFactory;
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'from_user_id',
         'to_user_id',

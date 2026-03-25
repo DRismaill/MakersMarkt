@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 
+use App\Enums\CreditReasonType;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ProductType;
+use App\Models\Order;
+use App\Models\CreditTransaction;
 use App\Enums\ComplexityLevel;
 use App\Enums\DurabilityLevel;
+use App\Enums\OrderStatus;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -27,7 +33,10 @@ class ProductController extends Controller
         $productTypeId = $validated['product_type_id'] ?? null;
         $material = trim($validated['material'] ?? '');
 
-        $query = Product::query()->with('productType');
+        $query = Product::query()
+            ->with('productType')
+            ->where('is_active', true)
+            ->where('is_deleted', false);
 
         if ($search !== '') {
             $query->where(function ($searchQuery) use ($search) {
@@ -206,5 +215,75 @@ class ProductController extends Controller
             'products' => $products,
             'currentSort' => $sort
         ]);
+    }
+
+    /**
+     * Place a credit-based order for a product.
+     */
+    public function buy(string $id)
+    {
+        $buyerId = auth()->id();
+        $product = Product::with('maker')->findOrFail($id);
+
+        if (! $product->maker) {
+            return redirect()->route('products.index')->with('error', 'Dit product heeft geen geldige maker en kan niet besteld worden.');
+        }
+
+        if ($product->maker_id === $buyerId) {
+            return redirect()->route('products.index')->with('error', 'Je kunt je eigen product niet bestellen.');
+        }
+
+        try {
+            $order = DB::transaction(function () use ($buyerId, $product) {
+                $productForPurchase = Product::whereKey($product->id)->lockForUpdate()->firstOrFail();
+
+                if (! $productForPurchase->is_active || $productForPurchase->is_deleted) {
+                    throw new \RuntimeException('Dit product is niet meer beschikbaar.');
+                }
+
+                $buyer = User::whereKey($buyerId)->lockForUpdate()->firstOrFail();
+                $maker = User::whereKey($productForPurchase->maker_id)->lockForUpdate()->firstOrFail();
+
+                $price = (float) $productForPurchase->price_credit;
+                $buyerBalance = (float) $buyer->credit_balance;
+
+                if ($buyerBalance < $price) {
+                    throw new \RuntimeException('Onvoldoende winkelkrediet om deze bestelling te plaatsen.');
+                }
+
+                $order = Order::create([
+                    'buyer_id' => $buyer->id,
+                    'product_id' => $productForPurchase->id,
+                    'maker_id' => $maker->id,
+                    'status' => OrderStatus::Paid,
+                    'status_note' => 'Betaald met winkelkrediet',
+                    'price_credit' => $productForPurchase->price_credit,
+                ]);
+
+                $buyer->decrement('credit_balance', $price);
+                $maker->increment('credit_balance', $price);
+
+                CreditTransaction::create([
+                    'from_user_id' => $buyer->id,
+                    'to_user_id' => $maker->id,
+                    'amount' => (string) $productForPurchase->price_credit,
+                    'reason_type' => CreditReasonType::Purchase,
+                    'order_id' => $order->id,
+                    'created_by_admin_id' => null,
+                ]);
+
+                $productForPurchase->update([
+                    'is_active' => false,
+                ]);
+
+                return $order;
+            });
+        } catch (\RuntimeException $exception) {
+            return redirect()->route('products.index')->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', "Bestelling geplaatst. Orderreferentie: #{$order->id}");
     }
 }

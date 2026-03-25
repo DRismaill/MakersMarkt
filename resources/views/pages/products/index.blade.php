@@ -1,7 +1,24 @@
 <x-layouts::app>
     <div class="container mx-auto mt-10">
+        @if(session('success'))
+            <div class="mb-4 rounded bg-green-100 text-green-800 px-4 py-3 dark:bg-green-900/40 dark:text-green-200">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-4 rounded bg-red-100 text-red-800 px-4 py-3 dark:bg-red-900/40 dark:text-red-200">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="flex justify-between items-center mb-5">
             <h1 class="text-2xl font-bold">Products List</h1>
+            @if(auth()->check() && auth()->user()->role->value === 'buyer')
+                <div class="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    Winkelkrediet: {{ number_format((float) auth()->user()->credit_balance, 2) }}
+                </div>
+            @endif
             @if(auth()->check() && auth()->user()->role->value === 'maker')
                 <a href="{{ route('products.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Create Product
@@ -100,10 +117,19 @@
                                 <a href="{{ route('products.edit', $product->id) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded text-sm">
                                     Edit
                                 </a>
+                            @elseif(auth()->check() && auth()->user()->role->value === 'buyer')
+                                <form method="POST" action="{{ route('products.buy', $product->id) }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                        Buy ({{ number_format((float) $product->price_credit, 2) }})
+                                    </button>
+                                </form>
+                            @elseif(!auth()->check())
+                                <a href="{{ route('login') }}" class="bg-zinc-600 hover:bg-zinc-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                    Login to buy
+                                </a>
                             @else
-                                <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">
-                                    Buy
-                                </button>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Alleen kopers kunnen bestellen</span>
                             @endif
                         </td>
                     </tr>

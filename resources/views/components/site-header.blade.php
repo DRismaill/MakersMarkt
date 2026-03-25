@@ -34,6 +34,19 @@
                 </a>
                 @endif
 
+                @if(auth()->user()->role->value === 'buyer')
+                <a
+                    href="{{ route('orders.mine') }}"
+                    wire:navigate
+                    class="flex items-center gap-2 text-base font-medium hover:text-amber-700 transition"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386a.75.75 0 01.724.57l.383 1.437M7.5 14.25a3 3 0 100 6 3 3 0 000-6zm9 0a3 3 0 100 6 3 3 0 000-6zm-9-3h9.75a.75.75 0 00.742-.635l1.5-9A.75.75 0 0018.75 1.5H5.11m0 0L4.318 5.007M5.11 1.5L4.318 5.007m0 0h15.432" />
+                    </svg>
+                    <span>Mijn bestellingen</span>
+                </a>
+                @endif
+
                 <!-- User Info & Logout -->
                 <div class="flex items-center gap-4 border-l border-zinc-200 pl-8">
                     <div class="text-right">

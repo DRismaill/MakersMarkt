@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -11,12 +12,17 @@ Route::get('products/index', [ProductController::class, 'index'])->name('product
 // Only makers can create and edit products
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
-    
+
+    Route::middleware('role:buyer')->group(function () {
+        Route::post('products/{id}/buy', [ProductController::class, 'buy'])->name('products.buy');
+        Route::get('orders/mine', [OrderController::class, 'index'])->name('orders.mine');
+    });
+
     // Only makers can access these routes
     Route::middleware('role:maker')->group(function () {
         // Portfolio route - MUST BE FIRST before {id} routes
         Route::get('products/portfolio', [ProductController::class, 'portfolio'])->name('products.portfolio');
-        
+
         Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('products', [ProductController::class, 'store'])->name('products.store');
         Route::get('products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
