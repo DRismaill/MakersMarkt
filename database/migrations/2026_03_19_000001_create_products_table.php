@@ -28,7 +28,7 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->restrictOnDelete();
 
-            $table->string('name');                // varchar(255)
+            $table->string('name', 30);
             $table->string('slug')->nullable()->unique();
             $table->text('description');
             $table->string('material');
