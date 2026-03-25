@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use App\Enums\ReportStatus;
+use App\Enums\ProductAdminActionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductReport extends Model
+class ProductAdminActionLog extends Model
 {
     use HasFactory;
 
@@ -14,13 +14,13 @@ class ProductReport extends Model
 
     protected $fillable = [
         'product_id',
-        'reported_by_user_id',
-        'reason',
-        'status',
+        'admin_user_id',
+        'product_name',
+        'action_type',
     ];
 
     protected $casts = [
-        'status' => ReportStatus::class,
+        'action_type' => ProductAdminActionType::class,
         'created_at' => 'datetime',
     ];
 
@@ -29,8 +29,8 @@ class ProductReport extends Model
         return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 
-    public function user()
+    public function adminUser()
     {
-        return $this->belongsTo(User::class, 'reported_by_user_id', 'id');
+        return $this->belongsTo(User::class, 'admin_user_id', 'id');
     }
 }

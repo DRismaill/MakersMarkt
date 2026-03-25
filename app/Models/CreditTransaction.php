@@ -19,9 +19,11 @@ class CreditTransaction extends Model
         'reason_type',
         'order_id',
         'created_by_admin_id',
+        'note',
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
         'reason_type' => CreditReasonType::class,
         'created_at' => 'datetime',
     ];

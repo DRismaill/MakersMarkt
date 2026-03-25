@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ComplexityLevel;
 use App\Enums\DurabilityLevel;
 use App\Enums\ProductApprovalStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -82,5 +83,18 @@ class Product extends Model
     public function productReports()
     {
         return $this->hasMany(ProductReport::class, 'product_id', 'id');
+    }
+
+    public function adminActionLogs()
+    {
+        return $this->hasMany(ProductAdminActionLog::class, 'product_id', 'id');
+    }
+
+    public function scopeVisibleInCatalog(Builder $query): Builder
+    {
+        return $query
+            ->where('approval_status', ProductApprovalStatus::Approved->value)
+            ->where('is_active', true)
+            ->where('is_deleted', false);
     }
 }
