@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\CreditAdjustmentDirection;
 use App\Enums\UserRole;
 use App\Exceptions\NegativeCreditBalanceNotAllowedException;
+use App\Filament\Pages\Concerns\AuthorizesAdminAccess;
 use App\Models\User;
 use App\Services\UserCreditService;
 use BackedEnum;
@@ -27,6 +28,7 @@ use UnitEnum;
 
 class ManageUserCredits extends Page implements HasTable
 {
+    use AuthorizesAdminAccess;
     use InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
@@ -42,16 +44,6 @@ class ManageUserCredits extends Page implements HasTable
     protected static ?string $title = 'Kredietbeheer';
 
     protected ?string $subheading = 'Beheer het winkelkrediet per gebruiker. Elke wijziging wordt als adjustment-transactie gelogd.';
-
-    public static function canAccess(): bool
-    {
-        $user = Filament::auth()->user();
-
-        return $user instanceof User
-            && $user->isAdmin()
-            && (! $user->is_blocked)
-            && (! $user->is_deleted);
-    }
 
     public function content(Schema $schema): Schema
     {

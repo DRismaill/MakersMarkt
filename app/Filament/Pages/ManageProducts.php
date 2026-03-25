@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\ProductAdminActionType;
 use App\Enums\ProductApprovalStatus;
+use App\Filament\Pages\Concerns\AuthorizesAdminAccess;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\ProductAdminService;
@@ -23,6 +24,7 @@ use UnitEnum;
 
 class ManageProducts extends Page implements HasTable
 {
+    use AuthorizesAdminAccess;
     use InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-archive-box-x-mark';
@@ -38,16 +40,6 @@ class ManageProducts extends Page implements HasTable
     protected static ?string $title = 'Productbeheer';
 
     protected ?string $subheading = 'Admins kunnen producten deactiveren. Gedeactiveerde producten blijven in de database, maar verdwijnen uit de openbare catalogus.';
-
-    public static function canAccess(): bool
-    {
-        $user = Filament::auth()->user();
-
-        return $user instanceof User
-            && $user->isAdmin()
-            && (! $user->is_blocked)
-            && (! $user->is_deleted);
-    }
 
     public function content(Schema $schema): Schema
     {
