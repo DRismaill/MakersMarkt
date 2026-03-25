@@ -15,10 +15,47 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::all();
-        return view('pages.products.index', compact('products'));
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:255',
+            'product_type_id' => 'nullable|integer|exists:product_types,id',
+            'material' => 'nullable|string|max:255',
+        ]);
+
+        $search = trim($validated['search'] ?? '');
+        $productTypeId = $validated['product_type_id'] ?? null;
+        $material = trim($validated['material'] ?? '');
+
+        $query = Product::query()->with('productType');
+
+        if ($search !== '') {
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($productTypeId) {
+            $query->where('product_type_id', $productTypeId);
+        }
+
+        if ($material !== '') {
+            $query->where('material', 'like', "%{$material}%");
+        }
+
+        $products = $query->orderBy('name')->get();
+        $productTypes = ProductType::orderBy('name')->get();
+
+        return view('pages.products.index', [
+            'products' => $products,
+            'productTypes' => $productTypes,
+            'filters' => [
+                'search' => $search,
+                'product_type_id' => $productTypeId,
+                'material' => $material,
+            ],
+        ]);
     }
 
     /**
@@ -118,14 +155,14 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
-        
+
         // Check if the user is the owner of the product
         if (auth()->id() !== $product->maker_id) {
             abort(403, 'You can only delete your own products');
         }
-        
+
         $product->delete();
-        
+
         return redirect()->route('products.portfolio')->with('success', 'Product deleted successfully!');
     }
 
@@ -136,10 +173,10 @@ class ProductController extends Controller
     {
         // Get the sort parameter from request, default to 'newest'
         $sort = request('sort', 'newest');
-        
+
         // Start query for maker's products
         $query = Product::where('maker_id', auth()->id());
-        
+
         // Apply sorting
         switch ($sort) {
             case 'name_asc':
@@ -162,9 +199,9 @@ class ProductController extends Controller
                 $query->orderBy('created_at', 'desc');
                 break;
         }
-        
+
         $products = $query->get();
-        
+
         return view('pages.products.portfolio', [
             'products' => $products,
             'currentSort' => $sort
