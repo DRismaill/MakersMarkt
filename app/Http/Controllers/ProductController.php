@@ -9,6 +9,7 @@ use App\Models\ProductType;
 use App\Enums\ComplexityLevel;
 use App\Enums\DurabilityLevel;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -48,6 +49,7 @@ class ProductController extends Controller
             'unique_feature' => 'required|string',
             'price_credit' => 'required|numeric|min:0',
             'has_external_link' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         // Ensure user is authenticated
@@ -58,6 +60,10 @@ class ProductController extends Controller
         $validated['maker_id'] = auth()->id();
         $validated['slug'] = Str::slug($validated['name']);
         $validated['has_external_link'] = $request->has('has_external_link');
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
 
         Product::create($validated);
 
@@ -102,10 +108,25 @@ class ProductController extends Controller
             'unique_feature' => 'required|string',
             'price_credit' => 'required|numeric|min:0',
             'has_external_link' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
         $validated['has_external_link'] = $request->has('has_external_link');
+
+        if ($request->hasFile('image')) {
+            // Delete old image if it exists
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        }
+
+        // Handle explicit image removal
+        if ($request->input('remove_image') && $product->image) {
+            Storage::disk('public')->delete($product->image);
+            $validated['image'] = null;
+        }
 
         $product->update($validated);
 
@@ -118,14 +139,19 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
-        
+
         // Check if the user is the owner of the product
         if (auth()->id() !== $product->maker_id) {
             abort(403, 'You can only delete your own products');
         }
-        
+
+        // Delete image from storage if it exists
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
-        
+
         return redirect()->route('products.portfolio')->with('success', 'Product deleted successfully!');
     }
 

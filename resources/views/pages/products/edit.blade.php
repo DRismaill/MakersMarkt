@@ -1,3 +1,4 @@
+@use('Illuminate\Support\Facades\Storage')
 <x-layouts::app>
     <div class="container mx-auto mt-10 max-w-2xl">
         <div class="mb-5">
@@ -14,7 +15,7 @@
             </div>
         @endif
 
-        <form action="{{ route('products.update', $product->id) }}" method="POST" class="bg-white shadow-md rounded-lg p-6">
+        <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="bg-white shadow-md rounded-lg p-6">
             @csrf
             @method('PUT')
 
@@ -141,6 +142,42 @@
                 @enderror
             </div>
 
+            <!-- Image -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">
+                    Productafbeelding
+                    <span class="text-gray-400 font-normal">(optioneel · jpeg, png, webp · max 2 MB)</span>
+                </label>
+
+                @if ($product->image)
+                    <div id="current-image" class="mb-3">
+                        <p class="text-xs text-gray-500 mb-1">Huidige afbeelding:</p>
+                        <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}"
+                             class="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-sm">
+                        <label class="flex items-center gap-2 mt-2 text-sm text-red-600 cursor-pointer select-none">
+                            <input type="checkbox" name="remove_image" value="1" class="rounded" onchange="toggleRemoveImage(this)">
+                            Afbeelding verwijderen
+                        </label>
+                    </div>
+                @endif
+
+                <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                    onchange="previewImage(event)"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 @error('image') border border-red-500 rounded-lg @enderror"
+                >
+                @error('image')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                <div id="image-preview" class="mt-3 hidden">
+                    <p class="text-xs text-gray-500 mb-1">Nieuwe afbeelding:</p>
+                    <img id="preview-img" src="" alt="Preview" class="w-40 h-40 object-cover rounded-lg border border-gray-200 shadow-sm">
+                </div>
+            </div>
+
             <!-- Buttons -->
             <div class="flex gap-4">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded">
@@ -165,6 +202,22 @@
             } else {
                 counter.classList.remove('text-red-500');
                 counter.classList.add('text-gray-400');
+            }
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const preview = document.getElementById('image-preview');
+            const img     = document.getElementById('preview-img');
+            img.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+        }
+
+        function toggleRemoveImage(checkbox) {
+            const currentImage = document.getElementById('current-image');
+            if (currentImage) {
+                currentImage.style.opacity = checkbox.checked ? '0.4' : '1';
             }
         }
 

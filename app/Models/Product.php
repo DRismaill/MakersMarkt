@@ -17,6 +17,7 @@ class Product extends Model
         'product_type_id',
         'name',
         'slug',
+        'image',
         'description',
         'material',
         'production_time_days',
