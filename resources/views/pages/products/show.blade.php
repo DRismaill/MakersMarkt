@@ -156,10 +156,10 @@
                 </div>
 
                 <!-- Right column: buy card + maker card -->
-                <div class="space-y-6">
+                <div class="space-y-6 sticky top-6 self-start">
 
                     <!-- Buy card -->
-                    <div class="bg-white rounded-xl border border-gray-200 p-6 sticky top-6">
+                    <div class="bg-white rounded-xl border border-gray-200 p-6">
                         <div class="text-2xl font-bold text-orange-500 mb-1">
                             €{{ number_format($product->price_credit, 2) }}
                         </div>
