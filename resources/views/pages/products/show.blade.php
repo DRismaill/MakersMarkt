@@ -151,7 +151,74 @@
                                 @endforeach
                             </div>
                         @endif
+
+                        <!-- Write a review -->
+                        <div class="mt-6 pt-6 border-t border-gray-100">
+                            @auth
+                                @if(auth()->user()->id !== $product->maker_id)
+                                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Schrijf een beoordeling</h3>
+                                    <form action="#" method="POST" class="space-y-3">
+                                        @csrf
+                                        <!-- Star rating picker -->
+                                        <div class="flex items-center gap-1" id="star-picker">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <button type="button" onclick="setRating({{ $i }})"
+                                                        data-star="{{ $i }}"
+                                                        class="star-btn w-7 h-7 text-gray-300 hover:text-yellow-400 transition">
+                                                    <svg class="w-7 h-7 fill-current" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.95 2.678c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.065 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z"/>
+                                                    </svg>
+                                                </button>
+                                            @endfor
+                                            <input type="hidden" name="rating" id="rating-input" value="">
+                                        </div>
+                                        <textarea name="comment" rows="3" placeholder="Deel je ervaring met dit product..."
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"></textarea>
+                                        <button type="submit"
+                                                class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-5 rounded-lg text-sm transition">
+                                            Beoordeling plaatsen
+                                        </button>
+                                    </form>
+                                @endif
+                            @else
+                                <a href="{{ route('login') }}"
+                                   class="flex items-center gap-2 text-sm text-orange-500 hover:text-orange-600 font-semibold transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                                    </svg>
+                                    Log in om een beoordeling te schrijven
+                                </a>
+                            @endauth
+                        </div>
                     </div>
+
+                    <!-- Report -->
+                    @auth
+                        @if(auth()->user()->id !== $product->maker_id)
+                            <div class="flex justify-end">
+                                <button type="button"
+                                        class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H13.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                                    </svg>
+                                    Product melden
+                                </button>
+                            </div>
+                        @endif
+                    @else
+                        <div class="flex justify-end">
+                            <a href="{{ route('login') }}"
+                               class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H13.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                                </svg>
+                                Product melden
+                            </a>
+                        </div>
+                    @endauth
 
                 </div>
 
@@ -170,10 +237,15 @@
                                class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition mb-3">
                                 Bewerken
                             </a>
-                        @else
+                        @elseif(auth()->check())
                             <button class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition mb-3">
                                 Kopen
                             </button>
+                        @else
+                            <a href="{{ route('login') }}"
+                               class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition mb-3">
+                                Log in om te bestellen
+                            </a>
                         @endif
 
                         <a href="{{ route('products.index') }}"
@@ -222,4 +294,14 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function setRating(value) {
+            document.getElementById('rating-input').value = value;
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                btn.classList.toggle('text-yellow-400', btn.dataset.star <= value);
+                btn.classList.toggle('text-gray-300', btn.dataset.star > value);
+            });
+        }
+    </script>
 </x-layouts::app>
