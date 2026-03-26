@@ -73,9 +73,13 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $slug)
     {
-        //
+        $product = Product::with(['productType', 'maker', 'productReviews.user'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return view('pages.products.show', compact('product'));
     }
 
     /**

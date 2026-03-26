@@ -14,6 +14,7 @@
 
             <!-- Filter Bar -->
             <form method="GET" action="{{ route('products.index') }}"
+                  id="filter-form"
                   class="bg-white border border-gray-200 rounded-xl p-5 mb-8 shadow-sm">
                 <div class="flex items-center gap-2 mb-4">
                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +41,8 @@
                     <!-- Product Type -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Producttype</label>
-                        <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
+                        <select name="type" onchange="document.getElementById('filter-form').submit()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
                             <option value="">Alle types</option>
                             @foreach(\App\Models\ProductType::all() as $type)
                                 <option value="{{ $type->id }}" {{ request('type') == $type->id ? 'selected' : '' }}>
@@ -53,7 +55,8 @@
                     <!-- Complexity -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Complexiteit</label>
-                        <select name="complexity" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
+                        <select name="complexity" onchange="document.getElementById('filter-form').submit()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
                             <option value="">Alle niveaus</option>
                             @foreach(\App\Enums\ComplexityLevel::cases() as $level)
                                 <option value="{{ $level->value }}" {{ request('complexity') === $level->value ? 'selected' : '' }}>
@@ -64,32 +67,7 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 mt-4">
-                    <button type="submit"
-                            class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-5 rounded-lg text-sm transition">
-                        Toepassen
-                    </button>
-                    @if(request()->hasAny(['search','type','complexity']))
-                        <a href="{{ route('products.index') }}"
-                           class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-lg text-sm transition">
-                            Wis filters
-                        </a>
-                    @endif
-                </div>
             </form>
-
-            <!-- Create button for makers -->
-            @if(auth()->check() && auth()->user()->role->value === 'maker')
-                <div class="flex justify-end mb-6">
-                    <a href="{{ route('products.create') }}"
-                       class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-lg flex items-center gap-2 text-sm transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Nieuw Product
-                    </a>
-                </div>
-            @endif
 
             <!-- Products Grid -->
             @php
@@ -113,7 +91,8 @@
             @else
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     @foreach($filtered as $product)
-                        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group">
+                        <a href="{{ route('products.show', $product->slug) }}"
+                           class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow group block">
 
                             <!-- Product Image -->
                             @if($product->image)
@@ -143,23 +122,14 @@
 
                                 <!-- Type badge + Rating row -->
                                 <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <!-- Product type -->
-                                        <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded">
-                                            {{ $product->productType->name }}
-                                        </span>
-
-                                        <!-- Moderation flag -->
-                                        @if($product->needs_moderation)
-                                            <span class="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded">
-                                                Gemarkeerd voor moderatie
-                                            </span>
-                                        @endif
-                                    </div>
+                                    <!-- Product type -->
+                                    <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded">
+                                        {{ $product->productType->name }}
+                                    </span>
 
                                     <!-- Rating -->
                                     @if($product->review_count > 0)
-                                        <div class="flex items-center gap-1 text-sm text-gray-500 whitespace-nowrap">
+                                        <div class="flex items-center gap-1 text-sm whitespace-nowrap">
                                             <svg class="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.95 2.678c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.065 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69L9.049 2.927z"/>
                                             </svg>
@@ -168,26 +138,34 @@
                                         </div>
                                     @endif
                                 </div>
-
-                                <!-- Action buttons -->
-                                <div class="mt-4">
-                                    @if(auth()->check() && auth()->user()->id === $product->maker_id && auth()->user()->role->value === 'maker')
-                                        <a href="{{ route('products.edit', $product->id) }}"
-                                           class="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 rounded-lg text-sm transition">
-                                            Bewerken
-                                        </a>
-                                    @else
-                                        <button class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 rounded-lg text-sm transition">
-                                            Kopen
-                                        </button>
-                                    @endif
-                                </div>
                             </div>
-                        </div>
+
+                            <!-- Moderation banner -->
+                            @if($product->needs_moderation)
+                                <div class="px-4 py-2 bg-red-50 border-t border-red-100 text-red-500 text-xs font-semibold">
+                                    Gemarkeerd voor moderatie
+                                </div>
+                            @endif
+
+                        </a>
                     @endforeach
                 </div>
             @endif
 
         </div>
     </div>
+
+    <script>
+        // Submit search on Enter (default) — also auto-submit after typing stops
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            let debounce;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    document.getElementById('filter-form').submit();
+                }, 500);
+            });
+        }
+    </script>
 </x-layouts::app>

@@ -25,4 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+// Public product detail page — must be after all static /products/* routes
+Route::get('products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
 require __DIR__.'/settings.php';
