@@ -1,0 +1,194 @@
+Startdatum: 24 Februari 2026
+Opdrachtgever: DreamScape Interactive
+Versie: 1.0
+Uitvoerder: Ismail Ameksa (D299220)
+Inhoudsopgave
+Probleemstelling	1
+Userstories	2
+ERD	7
+Projectplanning en Kostenraming	7
+
+Probleemstelling
+DreamScape Interactive wil een systeem ontwikkelen waarmee spelers hun virtuele items kunnen beheren en verhandelen binnen hun game account
+Op dit moment ontbreekt een centrale applicatie waarin:
+•	Spelers zelfstandig een account kunnen aanmaken
+•	Items overzichtelijk gepresenteerd en gefilterd kunnen worden
+•	Spelers hun eigen inventaris kunnen beheren
+•	Veilige handel tussen spelers mogelijk is
+•	Beheerders controle hebben over items en gebruikers
+Zonder een goed ontworpen systeem ontstaat:
+•	Onveiligheid rondom gebruikersgegevens
+•	Onvoldoende controle over item-economie
+•	Onoverzichtelijke inventarisstructuren
+•	Risico op ongeautoriseerde toegang tot gevoelige functies
+Daarom is het probleem dat moet worden opgelost:
+Hoe kan een veilig, gebruiksvriendelijk en schaalbaar systeem worden ontworpen waarmee spelers hun virtuele items kunnen beheren en verhandelen, terwijl beheerders controle behouden over de game economie en gebruikersstructuur?
+Userstories
+US | 1.02 Als speler wil ik een account kunnen aanmaken met een gebruikersnaam, e-mail en wachtwoord, zodat ik kan starten met het beheren van mijn items.
+Rol: speler
+Acceptatiecriteria
+•	Registratie vraagt: gebruikersnaam, e-mail, wachtwoord, wachtwoord bevestiging
+•	Gebruikersnaam en e-mail zijn uniek
+•	Wachtwoord wordt veilig opgeslagen (gehashed)
+•	Na registratie kan de gebruiker inloggen
+Taken
+1.	Maak registratieformulier + validatie
+2.	Sla gebruiker op in database met rol “speler”
+
+US | 1.03 Als gebruiker wil ik kunnen inloggen met mijn gebruikersnaam en wachtwoord, zodat ik toegang krijg tot mijn account.
+Rol: speler & Beheerder
+Acceptatiecriteria
+•	Inloggen met gebruikersnaam + wachtwoord
+•	Bij foutieve gegevens verschijnt een duidelijke melding
+•	Bij succesvolle login kom je op een startpagina/dashboard
+Taken
+1.	Maak loginpagina + validatie
+2.	Implementeer login flow + redirect
+
+US | 1.04 Als gebruiker wil ik kunnen uitloggen, zodat mijn account beschermd blijft op gedeelde apparaten.
+Rol: Speler & Beheerder
+Acceptatiecriteria
+•	Uitloggen beëindigt de sessie
+•	Na uitloggen kan de gebruiker beveiligde pagina’s niet meer openen
+Taken
+1.	Voeg logout knop toe in ui
+2.	Implementeer logout route/actie
+US | 1.05 Als gebruiker wil ik mijn profielinformatie kunnen bekijken, zodat ik weet welke gegevens in het systeem staan.
+Rol: Speler & Beheerder
+Acceptatiecriteria
+•	Profiel toont minimaal: gebruikersnaam, e-mail, rol
+•	Alleen ingelogde gebruikers kunnen dit zien
+Taken
+1.	Maak profielpagina
+2.	Haal gebruikersgegevens op en toon ze
+US | 1.06 Als gebruiker wil ik mijn profielinformatie kunnen aanpassen, zodat mijn gegevens actueel blijven.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Gebruiker kan e-mail en wachtwoord wijzigen
+•	Validatie voorkomt ongeldige e-mail
+•	Wachtwoordwijziging vereist bevestiging
+Taken:
+1.	Maak profiel wijzig formulier + validatie
+2.	Sla wijzigingen veilig op (inclusief hashing)
+US | 1.07 Als speler wil ik alle beschikbare items kunnen bekijken in een catalogus, zodat ik weet welke items er bestaan.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Catalogus toont lijst met items
+•	Per item minimaal: naam, type, zeldzaamheid
+•	Klik op item opent detailpagina
+Taken:
+1.	Maak cataloguspagina + item listing
+2.	Maak route naar item detail
+US | 1.08 Als speler wil ik een item kunnen openen en alle details zien, zodat ik de eigenschappen van het item begrijp.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Detail toont: naam, beschrijving, type, stats (0–100) en magische eigenschap
+•	Pagina is bereikbaar vanuit catalogus
+Taken:
+1.	Maak item detailpagina
+2.	Toon alle itemvelden netjes in UI
+US | 1.09 Als speler wil ik items kunnen zoeken en filteren op type en zeldzaamheid, zodat ik sneller vind wat ik zoek.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Filter op type werkt
+•	Filter op zeldzaamheid werkt
+•	Zoekveld filtert op itemnaam
+Taken:
+1.	Voeg filters + zoekveld toe aan catalogus UI
+2.	Bouw filter/zoek query logic
+US | 1.10 Als speler wil ik mijn eigen inventaris kunnen bekijken, zodat ik zie welke items ik bezit.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Inventaris toont alleen items van ingelogde speler
+•	Inventaris toont per item: naam, type, zeldzaamheid
+Taken:
+1.	Maak inventarispagina
+2.	Koppel inventaris aan ingelogde gebruiker
+US | 1.11 Als speler wil ik mijn inventaris kunnen sorteren en filteren, zodat ik mijn items makkelijker kan beheren.
+Rol: Speler & Beheerder
+Acceptatiecriteria:
+•	Filter op type werkt binnen inventaris
+•	Sorteren op zeldzaamheid of kracht werkt
+Taken:
+1.	Voeg sorteer/filter UI toe
+2.	Bouw sorteer/filter logic op database query
+US | 1.12 Als speler wil ik een handelsverzoek kunnen sturen naar een andere speler, zodat ik items kan ruilen.
+Rol: Speler
+Acceptatiecriteria:
+•	Speler kiest: ontvanger + item(s) die hij aanbiedt
+•	Ontvanger moet bestaan en mag niet zichzelf zijn
+•	Trade krijgt status “pending”
+Taken:
+1.	Maak trade request formulier
+2.	Sla trade op met status pending + relaties
+US | 1.13 Als speler wil ik mijn ontvangen handelsverzoeken kunnen bekijken, zodat ik weet wie met mij wil ruilen.
+Rol: Speler
+Acceptatiecriteria:
+•	Overzicht toont alle trades waar ik ontvanger ben
+•	Per trade: afzender, datum, status, aangeboden items
+Taken:
+1.	Maak pagina voor ontvangen trades
+2.	Toon trade info + gekoppelde items
+US |1.14 Als speler wil ik een handelsverzoek kunnen accepteren, zodat de ruil wordt uitgevoerd.
+Rol: Speler
+Acceptatiecriteria:
+•	Acceptatie verandert status naar “accepted”
+•	Items wisselen van eigenaar (inventaris wordt bijgewerkt)
+•	Alleen ontvanger kan accepteren
+Taken:
+1.	Maak accept knop + autorisatiecheck
+2.	Verplaats items in inventaris + update status
+US |1.15 Als speler wil ik een handelsverzoek kunnen weigeren, zodat ik ongewenste trades kan stoppen.
+Rol: Speler
+Acceptaitecriteria:
+•	Weigeren verandert status naar “rejected”
+•	Items blijven bij originele eigenaar
+•	Alleen ontvanger kan weigeren
+Taken:
+1.	Maak reject knop + autorisatiecheck
+2.	Update status naar rejected
+US |1.16 Als beheerder wil ik items kunnen aanmaken, bewerken en verwijderen, zodat de itemcatalogus up-to-date blijft.
+Rol: Beheerder
+Acceptatiecriteria:
+1.	Alleen rol “beheerder” heeft toegang
+2.	Item aanmaken bevat: naam, beschrijving, type, zeldzaamheid, stats 0–100, magische eigenschap
+3.	Bewerken past bestaande itemdata aan
+4.	Verwijderen verwijdert item (of blokkeert als het nog in inventarissen zit, keuze is toegestaan)
+Taken:
+1.	Maak admin item CRUD schermen
+2.	Voeg autorisatie + validatie (0–100) toe
+ERD
+ 
+Projectplanning en Kostenraming
+	Sprint 0
+Woensdag 25 februari (3.75 uur)	Opstarten project
+Donderdag 26 februari (2.75 uur)*	Sprint 0 afmaken: brainstorm/scope, smalle DoD, probleemstelling, low fi wireframes, user stories, ERD + planningdocument
+Vrijdag 27 februari (3.75 uur)	Afronden & checken: feedback vragen (klasgenoot), bijwerken, conventiedocument, backlog/sprintplanning klaarzetten
+
+	Sprint 1
+Dinsdag 3 maart (3.75 uur)	Start Sprint 1 (bouwen) + (alleen wat nodig is) medium/high wireframes of schermflow
+Woensdag 4 maart (3.75 uur)	Coderen core + haalbaarheid/privacy tekst voorbereiden
+Donderdag 5 maart (2.75 uur)*	Haalbaarheid & privacy bespreken + action points verwerken
+Vrijdag 6 maart (3.75 uur)	Sprint 1 afronden: coderen + mini sprint review + retro voorbereiding
+
+	Sprint 2
+Dinsdag 10 maart (3.75 uur)	Sprint 2: feature afronden + testplan/testcases opzetten + starten testen
+Woensdag 11 maart (3.75 uur)	Testen + bugs fixen + testrapport schrijven
+Donderdag 12 maart (2.75 uur)*	Opleveren testen/testrapport + review
+Vrijdag 13 maart (3.75 uur)	Buffer & polish: laatste bugs, opschonen docs, finale demo/presentatie klaar
+
+
+Projectduur: 
+We schatten in dat de project 38,25 uur zal duren. Deze uren zijn het totale aantal lesuren vanaf woensdag 25 februari
+Ureninschatting: 
+•	Ontwerp en specificatie: 8 uur 
+•	Ontwikkeling van de functionaliteiten: 25 uur 
+•	Testen en kwaliteitsborging: 4 uur 
+•	Documentatie en training: 1 uur Totaal: 38 uur
+Kostenraming: 
+Op basis van een uurtarief van €50 per uur, komen de totale kosten voor dit project uit op: 38 uur x €50,00 = €1.900,00 (EX btw)
+Akkoord:
+Door ondertekening van deze overeenkomst bevestigt de opdrachtgever dat zij akkoord gaan met de projectplanning en kostenraming zoals hierboven beschreven.
+Naam opdrachtgever: __________________________ 
+Handtekening: _________________________________
+Datum: ________________________________________
