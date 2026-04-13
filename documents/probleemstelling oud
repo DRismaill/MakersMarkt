@@ -1,0 +1,27 @@
+**Probleemstelling**
+Muziekschool TopTone in Amsterdam biedt een breed scala aan cursussen, maar ondervindt problemen met de administratieve verwerking van aanmeldingen en afmeldingen. Het huidige systeem maakt het moeilijk om een overzicht te behouden van wie er is aangemeld, welke instructeurs betrokken zijn, en om te voorkomen dat workshops dubbel geboekt worden.
+
+Om deze problemen op te lossen, is het doel om een online omgeving te ontwikkelen. Deze omgeving moet niet alleen als promotiemateriaal dienen, maar ook functioneren als een platform voor aanmeldingen. Dit platform moet gedetailleerde informatie kunnen bijhouden, zoals: 
+
+- Aantal deelnemers per cursus
+- Instructeur gegevens
+- Datum, tijd, en locatie van de cursus
+- Beschikbare plekken en al ingenomen plaatsen
+
+De online omgeving moet klanten in staat stellen om zich gemakkelijk in te schrijven voor cursussen. Zowel instructeurs als administrators moeten de mogelijkheid hebben om cursusinformatie te exporteren naar een Excel- of CSV-bestand met gegevens zoals naam, telefoonnummer, e-mail en muziekervaring van de deelnemers.
+
+Nieuwe cursussen kunnen worden aangemaakt door zowel instructeurs als administrators. Instructeurs die een cursus creëren, worden automatisch als contactpersoon gekoppeld aan de cursus. Administrators kunnen een instructeur selecteren uit een lijst. Bij het aanmaken van een cursus kunnen de volgende gegevens worden toegevoegd:
+
+- Titel en beschrijving
+- Instructeur
+- Maximale capaciteit
+- Afbeeldingen
+- Locatie/zaal
+- 
+De applicatie moet ook dienen voor het bijhouden van evaluatieformulieren van afgeronde workshops, waardoor scores van eerdere workshops kunnen worden ingezien. Instructeurs en administrators moeten de mogelijkheid hebben om cursussen te annuleren, bewerken en verwijderen.
+
+Een belangrijke vereiste is dat cursussen niet dubbel geboekt mogen worden. Dit betekent dat wanneer een cursus wordt aangemaakt, het systeem moet controleren of er geen andere boekingen zijn in hetzelfde tijdvak en op dezelfde locatie/zaal. Instructeurs mogen ook niet tegelijkertijd meerdere cursussen geven; het systeem moet hiervoor een waarschuwing geven.
+
+De homepage moet aantrekkelijk en gebruiksvriendelijk zijn, met een duidelijke hero sectie en een overzicht van alle aankomende workshops. Gebruikers moeten kunnen filteren op instructeur, cursus, en locatie. Inschrijvingen moeten vanuit de detailpagina van een cursus plaats kunnen vinden, waarop alle relevante informatie inzichtelijk is. Als een workshop volgeboekt is, mag er geen verdere inschrijving mogelijk zijn.
+
+Deze online omgeving moet volledig in het Nederlands zijn om optimaal te functioneren voor de beoogde gebruikers.
